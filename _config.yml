@@ -38,4 +38,4 @@ html:
 
 launch_buttons:
   notebook_interface: "jupyterlab"
-  colab_url: "https://colab.research.google.com/github/bakerjw/seismic-hazard-and-risk"
+  colab_url: "https://colab.research.google.com/"
