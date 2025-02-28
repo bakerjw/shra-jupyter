@@ -2,8 +2,11 @@
 # Learn more at https://jupyterbook.org/customize/config.html
 
 title: Seismic Hazard and Risk Analysis
-author: Jack Baker
+author: "<a href='https://www.jackwbaker.com'>Jack Baker</a>"
+copyright: "2025"
 logo: logo.png
+  extra_footer: "Licensed under <a href='https://github.com/bakerjw/shra-jupyter?tab=GPL-3.0-1-ov-file#readme'>GPL-3.0 license </a>.<br /><a href='https://github.com/bakerjw/shra-jupyter/issues'>Report issue</a>."
+
 
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html

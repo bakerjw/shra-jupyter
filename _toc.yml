@@ -2,7 +2,7 @@
 # Learn more at https://jupyterbook.org/customize/toc.html
 
 format: jb-book
-root: intro
+root: index
 chapters:
 - file: notebooks/01_intro
 - file: notebooks/09_failure_rate
