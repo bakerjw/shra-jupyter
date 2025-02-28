@@ -1,0 +1,68 @@
+# .github/workflows/deploy-jupyter-book.yml
+name: Build and Deploy SHRA Jupyter Book
+
+on:
+  push:
+    branches:
+      - main  # or master, depending on your default branch name
+  pull_request:
+    branches:
+      - main  # Build on PRs to check if they'll work before merging
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Check out your jupyter-book repository
+      - name: Checkout jupyter-book repository
+        uses: actions/checkout@v3
+        with:
+          path: jupyter-book
+      
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      # Install Jupyter Book and dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jupyter-book
+          pip install -r jupyter-book/requirements.txt  # If you have additional requirements
+      
+      # Build the Jupyter Book
+      - name: Build the book
+        run: |
+          cd jupyter-book
+          jupyter-book build .
+      
+      # Checkout your github.io repository
+      - name: Checkout github.io repository
+        uses: actions/checkout@v3
+        with:
+          repository: bakerjw/bakerjw.github.io  # Your website repository
+          token: ${{ secrets.DEPLOY_TOKEN }}  # Create a personal access token with repo scope
+          path: github-pages
+      
+      # Copy the built book to your github.io repository
+      - name: Copy built book to github.io repository
+        run: |
+          # Create directory if it doesn't exist at the desired location
+          mkdir -p github-pages/shra
+          
+          # Copy built book files
+          cp -r jupyter-book/_build/html/* github-pages/shra/
+      
+      # Commit and push changes to github.io repository
+      - name: Commit and push
+        run: |
+          cd github-pages
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Update Jupyter Book from automated build" || echo "No changes to commit"
+          git push
