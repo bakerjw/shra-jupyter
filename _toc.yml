@@ -3,7 +3,17 @@
 
 format: jb-book
 root: index
-chapters:
-- file: notebooks/01_intro
-- file: notebooks/09_failure_rate
-- file: notebooks/markdown-notebooks
+options:  # The options key will be applied to all chapters, but not sub-sections
+  numbered: True
+parts:
+#  - caption: Introduction
+#    numbered: True  # Only applies to chapters in Part 1.
+#    chapters:
+  - caption: Analysis Sections
+    chapters:
+    - file: notebooks/02 Logarithms
+    - file: notebooks/04 NGAW2 Analysis
+    - file: notebooks/09 Failure Rate
+#  - caption: Extra Resources
+#    chapters:
+#    - file: notebooks/markdown-notebooks
