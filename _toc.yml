@@ -13,7 +13,9 @@ parts:
     chapters:
     - file: notebooks/02 Logarithms
     - file: notebooks/04 NGAW2 Analysis
+    - file: notebooks/06 PSHA Calculation
     - file: notebooks/09 Failure Rate
+    - file: notebooks/09 Risk Targeted Hazard Level 
 #  - caption: Extra Resources
 #    chapters:
 #    - file: notebooks/markdown-notebooks
