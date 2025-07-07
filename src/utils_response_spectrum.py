@@ -47,13 +47,13 @@ class ResponseSpectrum(object):
 
         """
         self.periods = periods
-        self.num_per = len(periods)
+        self.num_periods = len(periods)
         self.acceleration = convert_accel_units(acceleration, units)
         self.damping = damping
         self.d_t = time_step
         self.velocity, self.displacement = get_velocity_displacement(
             self.d_t, self.acceleration)
-        self.num_steps = len(self.acceleration)
+        self.num_time_steps = len(self.acceleration)
         self.omega = (2. * np.pi) / self.periods
         self.response_spectrum = None
 
@@ -160,10 +160,10 @@ class NewmarkBeta(ResponseSpectrum):
             a_t - Acceleration response of a SDOF oscillator
         """
         # Pre-allocate arrays
-        accel = np.zeros([self.num_steps, self.num_per], dtype=float)
-        vel = np.zeros([self.num_steps, self.num_per], dtype=float)
-        disp = np.zeros([self.num_steps, self.num_per], dtype=float)
-        a_t = np.zeros([self.num_steps, self.num_per], dtype=float)
+        accel = np.zeros([self.num_time_steps, self.num_periods], dtype=float)
+        vel = np.zeros([self.num_time_steps, self.num_periods], dtype=float)
+        disp = np.zeros([self.num_time_steps, self.num_periods], dtype=float)
+        a_t = np.zeros([self.num_time_steps, self.num_periods], dtype=float)
         
         # Initial line
         accel[0, :] = (-self.acceleration[0] - (cval * vel[0, :])) - \
@@ -171,7 +171,7 @@ class NewmarkBeta(ResponseSpectrum):
         a_t[0, :] = accel[0, :] + accel[0, :]
         
         # Now compute
-        for j in range(1, self.num_steps):
+        for j in range(1, self.num_time_steps):
             
             # Displacement
             disp[j, :] = disp[j-1, :] + (self.d_t * vel[j-1, :]) + \
@@ -209,22 +209,22 @@ class NigamJennings(ResponseSpectrum):
         omega2 = omega ** 2.
         omega3 = omega ** 3.
         omega_d = omega * sqrt(1.0 - (self.damping ** 2.))
-        const = {  # noqa
+        constants = {  # noqa
             'f1': (2.0 * self.damping) / (omega3 * self.d_t),
             'f2': 1.0 / omega2,
             'f3': self.damping * omega,
             'f4': 1.0 / omega_d
         }
-        const['f5'] = const['f3'] * const['f4']
-        const['f6'] = 2.0 * const['f3']
-        const['e'] = np.exp(-const['f3'] * self.d_t)
-        const['s'] = np.sin(omega_d * self.d_t)
-        const['c'] = np.cos(omega_d * self.d_t)
-        const['g1'] = const['e'] * const['s']
-        const['g2'] = const['e'] * const['c']
-        const['h1'] = (omega_d * const['g2']) - (const['f3'] * const['g1'])
-        const['h2'] = (omega_d * const['g1']) + (const['f3'] * const['g2'])
-        x_a, x_v, x_d = self._get_time_series(const, omega2)
+        constants['f5'] = constants['f3'] * constants['f4']
+        constants['f6'] = 2.0 * constants['f3']
+        constants['e'] = np.exp(-constants['f3'] * self.d_t)
+        constants['s'] = np.sin(omega_d * self.d_t)
+        constants['c'] = np.cos(omega_d * self.d_t)
+        constants['g1'] = constants['e'] * constants['s']
+        constants['g2'] = constants['e'] * constants['c']
+        constants['h1'] = (omega_d * constants['g2']) - (constants['f3'] * constants['g1'])
+        constants['h2'] = (omega_d * constants['g1']) + (constants['f3'] * constants['g2'])
+        x_a, x_v, x_d = self._get_time_series(constants, omega2)
 
         self.response_spectrum = {
             'Period': self.periods,
@@ -246,11 +246,11 @@ class NigamJennings(ResponseSpectrum):
 
         return self.response_spectrum, time_series, x_a, x_v, x_d
         
-    def _get_time_series(self, const, omega2):
+    def _get_time_series(self, constants, omega2):
         """
         Calculates the acceleration, velocity and displacement time series for
         the SDOF oscillator
-        :param dict const:
+        :param dict constants:
             Constants of the algorithm
         :param np.ndarray omega2:
             Square of the oscillator period
@@ -259,28 +259,28 @@ class NigamJennings(ResponseSpectrum):
             x_v = Velocity time series
             x_d = Displacement time series
         """
-        x_d = np.zeros([self.num_steps - 1, self.num_per], dtype=float)
+        x_d = np.zeros([self.num_time_steps - 1, self.num_periods], dtype=float)
         x_v = np.zeros_like(x_d)
         x_a = np.zeros_like(x_d)
         
-        for k in range(0, self.num_steps - 1):
-            yval = k - 1
-            dug = self.acceleration[k + 1] - self.acceleration[k]
-            z_1 = const['f2'] * dug
-            z_2 = const['f2'] * self.acceleration[k]
-            z_3 = const['f1'] * dug
+        for k in range(0, self.num_time_steps - 1):
+            y_val = k - 1
+            d_ug = self.acceleration[k + 1] - self.acceleration[k]
+            z_1 = constants['f2'] * d_ug
+            z_2 = constants['f2'] * self.acceleration[k]
+            z_3 = constants['f1'] * d_ug
             z_4 = z_1 / self.d_t
             if k == 0:
                 b_val = z_2 - z_3
-                a_val = (const['f5'] * b_val) + (const['f4'] * z_4)
+                a_val = (constants['f5'] * b_val) + (constants['f4'] * z_4)
             else:    
                 b_val = x_d[k - 1, :] + z_2 - z_3
-                a_val = (const['f4'] * x_v[k - 1, :]) +\
-                    (const['f5'] * b_val) + (const['f4'] * z_4)
+                a_val = (constants['f4'] * x_v[k - 1, :]) +\
+                    (constants['f5'] * b_val) + (constants['f4'] * z_4)
 
-            x_d[k, :] = (a_val * const['g1']) + (b_val * const['g2']) +\
+            x_d[k, :] = (a_val * constants['g1']) + (b_val * constants['g2']) +\
                 z_3 - z_2 - z_1
-            x_v[k, :] = (a_val * const['h1']) - (b_val * const['h2']) - z_4
+            x_v[k, :] = (a_val * constants['h1']) - (b_val * constants['h2']) - z_4
             x_a[k, :] = (-const['f6'] * x_v[k, :]) - (omega2 * x_d[k, :])
         return x_a, x_v, x_d
 
